@@ -127,3 +127,7 @@ mongodb_set_parameters:
 
 # custom config options
 mongodb_config:
+
+# sharding config
+mongodb_sharding_enabled: false
+mongodb_sharding_cluster_role: 

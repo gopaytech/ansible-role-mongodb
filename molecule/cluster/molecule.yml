@@ -36,6 +36,15 @@ platforms:
     pre_build_image: true
     groups:
       - mongo_replicas
+  - name: config_server
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-centos7}-ansible:latest"
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    groups:
+      - config_server
 provisioner:
   name: ansible
   config_options:
@@ -71,5 +80,8 @@ provisioner:
           - host_name: "{{ hostvars[inventory_hostname].ansible_default_ipv4.address }}"
             host_port: "{{ mongodb_net_port }}"
             host_type: arbiter
+      config_server:
+        mongodb_sharding_enabled: true
+        clusterRole: configsvr
 verifier:
   name: ansible
