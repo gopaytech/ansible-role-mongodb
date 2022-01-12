@@ -130,4 +130,13 @@ mongodb_config:
 
 # sharding config
 mongodb_sharding_enabled: false
-mongodb_sharding_cluster_role: 
+mongodb_sharding_cluster_role: shard_name
+mongodb_use_mongos: false
+mongodb_sharding_members:
+  - shard_name: shard01
+    shard_address: 172.17.0.5:27017
+  - shard_name: shard02
+    shard_address: 172.17.0.6:27017
+    
+config_server_replset_name: cfgsvr_replset
+config_server_primary_ip: 127.0.0.1

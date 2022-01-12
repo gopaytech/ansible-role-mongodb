@@ -8,6 +8,8 @@ After=network-online.target
 User={{ mongodb_user }}
 {% if mongodb_use_numa | bool %}
 ExecStart=/usr/bin/numactl --interleave=all /usr/bin/mongod --config /etc/mongod.conf
+{% elif mongodb_use_mongos | bool %}
+ExecStart=mongos --configdb {{ config_server_replset_name }}/{{ config_server_primary_ip }}:27017
 {% else %}
 ExecStart=/usr/bin/mongod --config /etc/mongod.conf
 {% endif %}
