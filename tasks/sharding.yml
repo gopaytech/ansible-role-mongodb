@@ -13,7 +13,7 @@
     login_password: "{{ mongodb_user_admin_password }}"
     shard: "{{ item.shard_name }}/{{ item.shard_address }}"
     sharded_databases:
-      - foo_service
+      - "{{ mongodb_database_name }}"
     state: present
   loop: "{{ mongodb_sharding_members }}"
   when: mongodb_use_mongos

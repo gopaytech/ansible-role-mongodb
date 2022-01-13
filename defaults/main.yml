@@ -129,6 +129,7 @@ mongodb_set_parameters:
 mongodb_config:
 
 # sharding config
+mongodb_database_name: "foo_service"
 mongodb_sharding_enabled: false
 mongodb_sharding_cluster_role: shard_name
 mongodb_use_mongos: false

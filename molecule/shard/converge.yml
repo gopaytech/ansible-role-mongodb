@@ -1,10 +1,10 @@
 ---
 - name: Converge
   hosts: config_server
-  # tasks:
-  #   - name: "Include ansible-role-mongodb"
-  #     include_role:
-  #       name: "ansible-role-mongodb"
+  tasks:
+    - name: "Include ansible-role-mongodb"
+      include_role:
+        name: "ansible-role-mongodb"
   vars:
     mongodb_package: "{{ lookup('env','MONGODB_PACKAGE') }}"
     mongodb_version: "{{ lookup('env','MONGODB_VERSION') }}"
@@ -21,26 +21,26 @@
       database: admin
       }
 
-# - name: Converge
-#   hosts: shard_server
-#   tasks:
-#     - name: "Include ansible-role-mongodb"
-#       include_role:
-#         name: "ansible-role-mongodb"
-#   vars:
-#     mongodb_package: "{{ lookup('env','MONGODB_PACKAGE') }}"
-#     mongodb_version: "{{ lookup('env','MONGODB_VERSION') }}"
-#     mongodb_security_authorization: "{{ lookup('env', 'AUTH_STATE') }}"
-#     mongodb_storage_dbpath: /var/lib/mongodb
-#     mongodb_net_bindip: 0.0.0.0
+- name: Converge
+  hosts: shard_server
+  tasks:
+    - name: "Include ansible-role-mongodb"
+      include_role:
+        name: "ansible-role-mongodb"
+  vars:
+    mongodb_package: "{{ lookup('env','MONGODB_PACKAGE') }}"
+    mongodb_version: "{{ lookup('env','MONGODB_VERSION') }}"
+    mongodb_security_authorization: "{{ lookup('env', 'AUTH_STATE') }}"
+    mongodb_storage_dbpath: /var/lib/mongodb
+    mongodb_net_bindip: 0.0.0.0
 
-#     mongodb_users:
-#       - {
-#       name: testUser,
-#       password: passw0rd,
-#       roles: readWrite,
-#       database: admin
-#       }
+    mongodb_users:
+      - {
+      name: testUser,
+      password: passw0rd,
+      roles: readWrite,
+      database: admin
+      }
 
 - name: Converge
   hosts: mongos
