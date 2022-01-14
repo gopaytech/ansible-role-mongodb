@@ -8,13 +8,13 @@ After=network-online.target
 User={{ mongodb_user }}
 {% if mongodb_use_numa | bool %}
 {% if mongodb_use_mongos | bool %}
-ExecStart=/usr/bin/numactl --interleave=all mongos --keyFile {{ mongodb_security_keyfile }} --configdb {{ config_server_replset_name }}/{{ config_server_primary_ip }}:{{ mongodb_net_port }}
+ExecStart=/usr/bin/numactl --interleave=all mongos --config /etc/mongos.conf
 {% else %}
 ExecStart=/usr/bin/numactl --interleave=all /usr/bin/mongod --config /etc/mongod.conf
 {% endif %}
 {% else %}
 {% if mongodb_use_mongos | bool %}
-ExecStart=mongos --keyFile {{ mongodb_security_keyfile }} --configdb {{ config_server_replset_name }}/{{ config_server_primary_ip }}:{{ mongodb_net_port }}
+ExecStart=mongos --config /etc/mongos.conf
 {% else %}
 ExecStart=/usr/bin/mongod --config /etc/mongod.conf
 {% endif %}
