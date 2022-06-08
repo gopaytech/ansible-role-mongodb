@@ -17,6 +17,8 @@ jobs:
           - ubuntu1604
           - ubuntu1804
         mongodb_version:
+          - '5.0'
+          - '4.4'
           - '4.2'
           - '4.0'
           - '3.6'
