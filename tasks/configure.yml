@@ -34,7 +34,7 @@
     owner: "{{ mongodb_user }}"
     group: "root"
     mode: 0600
-  when: mongodb_replication_replset | length > 0
+  when: mongodb_use_mongos or (mongodb_replication_replset | length > 0)
 
 - name: Create log dir if missing
   file:
@@ -82,6 +82,20 @@
   notify:
     - mongodb restart
     - wait when mongodb is started
+  when: not mongodb_use_mongos
+
+- name: Configure mongos
+  template:
+    src: mongos.conf.j2
+    dest: /etc/mongos.conf
+    backup: true
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - mongodb restart
+    - wait when mongodb is started
+  when: mongodb_use_mongos
 
 - name: Flush all handlers at this point
   meta: flush_handlers
