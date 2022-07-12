@@ -75,5 +75,12 @@
     - mongodb restart
     - wait when mongodb is started
 
+- name: Configure setDefaultRWConcern and defaultWriteConcern for mongo | Way 2
+  command: >
+    mongo admin --quiet -u {{ mongodb_root_admin_name }} \
+          -p {{ mongodb_root_admin_password }} --port {{ mongodb_net_port }} --eval "db.adminCommand({'setDefaultRWConcern' : 1, 'defaultWriteConcern' : {'w' : 1}})"  
+  when: ( mongodb_master is defined and mongodb_master and mongodb_version == '5.0' )          
+  tags: [mongodb]        
+
 - name: Flush all handlers at this point
   meta: flush_handlers
