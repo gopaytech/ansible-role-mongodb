@@ -35,5 +35,7 @@ systemLog:
   path: {{ mongodb_systemlog_path }}
   {%- endif %}
 
+{% set mongodb_net_port_map = ':' ~ mongodb_net_port ~ ',' %}
+
 sharding:
-  configDB: {{ config_server_replset_name }}/{{ config_server_primary_ip }}:{{ mongodb_net_port }}
+  configDB: {{ config_server_replset_name }}/{{ groups['config_server'] | map('extract', hostvars, ['fqdn']) | join(mongodb_net_port_map) }}:{{mongodb_net_port}}

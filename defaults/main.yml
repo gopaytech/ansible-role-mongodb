@@ -148,4 +148,3 @@ mongodb_sharding_members:
     shard_address: 172.17.0.6:27017
     
 config_server_replset_name: cfgsvr_replset
-config_server_primary_ip: 127.0.0.1
