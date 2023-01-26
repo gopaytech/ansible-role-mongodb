@@ -10,17 +10,21 @@ Ansible role to install and manage [MongoDB](http://www.mongodb.org/).
 - Setup MMS automation agent;
 
 MongoDB support matrix:
+Please refer to these official links:
+- [MongoDB Software Lifecycle Schedules](https://www.mongodb.com/support-policy/lifecycles)
+- [MongoDB Official Repo](https://repo.mongodb.org)
 
-| Distribution   | < MongoDB 3.4 |    MongoDB 3.6     |    MongoDB 4.0     |   MongoDB 4.2      |   MongoDB 4.4      | MongoDB 5.0        |
-| -------------- | :-----------: | :----------------: | :----------------: | :----------------: | :----------------: | :----------------: |
-| Ubuntu 16.04   |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :x:         |        :x:         |
-| Ubuntu 18.04   |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :x:         |        :x:         |
-| Ubuntu 20.04   |  :no_entry:   |        :x:         |        :x:         |        :x:         | :white_check_mark: | :white_check_mark: |
-| Debian 9.x     |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :o:         |
-| Debian 10.x    |  :no_entry:   |        :x:         |        :x:         | :white_check_mark: | :white_check_mark: |        :o:         |
-| RHEL 7.x       |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :o:         |
-| RHEL 8.x       |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :o:         |
-| Amazon Linux 2 |  :no_entry:   | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |        :o:         |
+| Distribution   |   MongoDB 3.2   |   MongoDB 3.4   |   MongoDB 3.6   |   MongoDB 4.0   |   MongoDB 4.2   |     MongoDB 4.4     |    MongoDB 5.0     |    MongoDB 6.0     |
+| -------------- | :-------------: | :-------------: | :-------------: | :-------------: | :-------------: | :----------------:  | :----------------: | :----------------: |
+| Ubuntu 16.04   |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
+| Ubuntu 18.04   |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |  :white_check_mark: |        :o:         |        :o:         |
+| Ubuntu 20.04   |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |  :white_check_mark: | :white_check_mark: |        :o:         |
+| Ubuntu 22.04   |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |         :o:         | :white_check_mark: | :white_check_mark: |
+| Debian 9.x     |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
+| Debian 10.x    |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
+| RHEL 7.x       |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
+| RHEL 8.x       |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
+| Amazon Linux 2 |   :no_entry:    |   :no_entry:    |   :no_entry:    |   :no_entry:    |    :no_entry:   |      :no_entry:     |        :o:         |        :o:         |
 
 - :white_check_mark: - fully tested
 - :o: - not tested yet
