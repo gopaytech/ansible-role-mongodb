@@ -13,6 +13,8 @@ mongodb_apt_key_id:
   "4.4": "20691eec35216c63caf66ce1656408e390cfb1f5"
   "5.0": "F5679A222C647C87527C2F8CB00A0BD1E2C63C11"
   "6.0": "39BD841E4BE5FB195A65400E6A26B1AE64C3C388"
+  "7.0": "E58830201F7DD82CD808AA84160D26BB1785BA38"
+  "8.0": "4B0752C1BCA238C0B4EE14DC41DE058A4E7DCA05"
 mongodb_apt_key_url:
   "3.2": "https://www.mongodb.org/static/pgp/server-3.2.asc"
   "3.6": "https://www.mongodb.org/static/pgp/server-3.6.asc"
@@ -21,6 +23,9 @@ mongodb_apt_key_url:
   "4.4": "https://www.mongodb.org/static/pgp/server-4.4.asc"
   "5.0": "https://www.mongodb.org/static/pgp/server-5.0.asc"
   "6.0": "https://www.mongodb.org/static/pgp/server-6.0.asc"
+  "7.0": "https://www.mongodb.org/static/pgp/server-7.0.asc"
+  "8.0": "https://www.mongodb.org/static/pgp/server-8.0.asc"
+  
 
 mongodb_pymongo_from_pip: true                   # Install latest PyMongo via PIP or package manager
 mongodb_pymongo_pip_version: 3.11.3
