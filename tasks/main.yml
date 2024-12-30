@@ -43,7 +43,7 @@
   ansible.builtin.command: "{{ 'mongosh' if mongodb_version.split('.')[0] | int >= 5 else 'mongo' }} --quiet -u {{ mongodb_root_admin_name }} -p {{ mongodb_root_admin_password }} --eval 'db.adminCommand({\"setDefaultRWConcern\": 1,\"defaultWriteConcern\": { \"w\": 1 }})'"
   when: ( mongodb_replication_replset | length > 0
           and mongodb_master is defined and mongodb_master )
-  no_log: true
+  no_log: false
   tags: [mongodb]
 
 - name: Include replication configuration
