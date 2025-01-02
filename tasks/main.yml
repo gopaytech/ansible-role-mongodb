@@ -38,11 +38,16 @@
         and mongodb_master is defined and mongodb_master )
   tags: [mongodb]
 
-# patch known issue default rw concern
+# patch known issue default read-write concern on MongoDB Version > 5.0
 - name: Set default read-write concern
-  ansible.builtin.command: "{{ 'mongosh' if mongodb_version.split('.')[0] | int >= 5 else 'mongo' }} --quiet -u {{ mongodb_root_admin_name }} -p {{ mongodb_root_admin_password }} --eval 'db.adminCommand({\"setDefaultRWConcern\": 1,\"defaultWriteConcern\": { \"w\": 1 }})'"
-  when: ( mongodb_replication_replset | length > 0
-          and mongodb_master is defined and mongodb_master and mongodb_sharding_enabled is false)
+  ansible.builtin.command: >
+    mongosh --quiet -u {{ mongodb_root_admin_name }} -p {{ mongodb_root_admin_password }}
+    --eval 'db.adminCommand({"setDefaultRWConcern": 1, "defaultWriteConcern": { "w": 1 }})'
+  when: 
+    - mongodb_version.split('.')[0] | int > 5
+    - mongodb_replication_replset | length > 0
+    - mongodb_master is defined and mongodb_master
+    - mongodb_sharding_enabled is false
   no_log: true
   tags: [mongodb]
 
