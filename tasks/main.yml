@@ -48,6 +48,20 @@
     - mongodb_replication_replset | length > 0
     - mongodb_master is defined and mongodb_master
     - mongodb_sharding_enabled is false
+    - mongodb_security_authorization == 'enabled'
+  no_log: true
+  tags: [mongodb]
+
+- name: Set default read-write concern when auth is not enabled
+  ansible.builtin.command: >
+    mongosh --quiet
+    --eval 'db.adminCommand({"setDefaultRWConcern": 1, "defaultWriteConcern": { "w": 1 }})'
+  when: 
+    - mongodb_version.split('.')[0] | int > 5
+    - mongodb_replication_replset | length > 0
+    - mongodb_master is defined and mongodb_master
+    - mongodb_sharding_enabled is false
+    - mongodb_security_authorization != 'enabled'
   no_log: true
   tags: [mongodb]
 
