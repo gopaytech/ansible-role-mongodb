@@ -27,8 +27,8 @@ mongodb_apt_key_url:
   "8.0": "https://www.mongodb.org/static/pgp/server-8.0.asc"
   
 
-mongodb_pymongo_from_pip: true                   # Install latest PyMongo via PIP or package manager
-mongodb_pymongo_pip_version: 3.12.3
+mongodb_pymongo_from_pip: false                  # Use system package for better compatibility
+mongodb_pymongo_pip_version: 3.11.4             # Compatible version for Ansible modules
 
 mongodb_user_update_password: "on_create"        # MongoDB user password update default policy
 mongodb_manage_service: true
