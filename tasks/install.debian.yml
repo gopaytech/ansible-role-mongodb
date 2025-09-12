@@ -81,52 +81,51 @@
   notify:
     - reload systemd
 
+# Workaround for the idempotence issue on Debian 10 with pip module
+- name: Forcefully set mongodb_pymongo_from_pip to false on Debian 10
+  set_fact:
+    mongodb_pymongo_from_pip: false
+  when:
+    - ansible_distribution == 'Debian'
+    - ansible_distribution_release == 'buster'
 
-  # Workaround for the idempotence issue on Debian 10 with pip module
-  - name: Forcefully set mongodb_pymongo_from_pip to false on Debian 10
-    set_fact:
-      mongodb_pymongo_from_pip: false
-    when:
-      - ansible_distribution == 'Debian'
-      - ansible_distribution_release == 'buster'
+# Always use apt for Ubuntu 20 and newer to avoid PEP 668 pip issues and ensure system stability
+- name: Forcefully set mongodb_pymongo_from_pip to false on Ubuntu 20+
+  set_fact:
+    mongodb_pymongo_from_pip: false
+  when:
+    - ansible_distribution == 'Ubuntu'
+    - ansible_distribution_major_version | int >= 20
 
-  # Always use apt for Ubuntu 20 and newer to avoid PEP 668 pip issues and ensure system stability
-  - name: Forcefully set mongodb_pymongo_from_pip to false on Ubuntu 20+
-    set_fact:
-      mongodb_pymongo_from_pip: false
-    when:
-      - ansible_distribution == 'Ubuntu'
-      - ansible_distribution_major_version | int >= 20
+- name: Install PyMongo package
+  apt:
+    name: "{{ mongodb_pymongo_package }}"
+    state: present
+    update_cache: true
+  when: not mongodb_pymongo_from_pip
 
-  - name: Install PyMongo package
-    apt:
-      name: "{{ mongodb_pymongo_package }}"
-      state: present
-      update_cache: true
-    when: not mongodb_pymongo_from_pip
+- name: Install PIP
+  apt:
+    pkg: "{{ mongodb_pymongo_deps }}"
+  when:
+    - mongodb_pymongo_from_pip | bool
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
 
-  - name: Install PIP
-    apt:
-      pkg: "{{ mongodb_pymongo_deps }}"
-    when:
-      - mongodb_pymongo_from_pip | bool
-      - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
+# TODO: check if it is still needed for Debian/Ubuntu
+- name: Install setuptools (required for ansible 2.7+)
+  apt:
+    pkg: "{{ mongodb_python_setuptools }}"
+  when:
+    - mongodb_pymongo_from_pip | bool
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
 
-  # TODO: check if it is still needed for Debian/Ubuntu
-  - name: Install setuptools (required for ansible 2.7+)
-    apt:
-      pkg: "{{ mongodb_python_setuptools }}"
-    when:
-      - mongodb_pymongo_from_pip | bool
-      - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
-
-  - name: Install PyMongo from PIP
-    pip:
-      name:
-        - pymongo
-      state: "{{ mongodb_pymongo_pip_version is defined | ternary('present', 'latest') }}"
-      version: "{{ mongodb_pymongo_pip_version | default(omit) }}"
-      executable: "{{ mongodb_pip_executable }}"
-    when:
-      - mongodb_pymongo_from_pip | bool
-      - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
+- name: Install PyMongo from PIP
+  pip:
+    name:
+      - pymongo
+    state: "{{ mongodb_pymongo_pip_version is defined | ternary('present', 'latest') }}"
+    version: "{{ mongodb_pymongo_pip_version | default(omit) }}"
+    executable: "{{ mongodb_pip_executable }}"
+  when:
+    - mongodb_pymongo_from_pip | bool
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
