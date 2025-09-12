@@ -24,6 +24,13 @@
   debug:
     msg: "MongoDB connection status: {{ 'SUCCESS' if mongodb_connection_test.failed is not defined else 'FAILED - ' + mongodb_connection_test.msg }}"
 
+- name: Debug IP addresses being used
+  debug:
+    msg: 
+      - "mongodb_net_bindip: {{ mongodb_net_bindip }}"
+      - "Resolved login_host: {{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+      - "mongodb_login_host (if set): {{ mongodb_login_host | default('NOT SET') }}"
+
 - name: create administrative user "{{ mongodb_user_admin_name }}"
   mongodb_user:
     database: admin
@@ -92,6 +99,21 @@
 - name: Display backup user creation result (without sensitive data)
   debug:
     msg: "Backup user creation: {{ 'SUCCESS' if backup_user_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
+
+- name: Test if admin user can authenticate
+  mongodb_info:
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    login_user: "{{ mongodb_root_admin_name }}"
+    login_password: "{{ mongodb_root_admin_password }}"
+    login_database: "admin"
+  register: admin_auth_test
+  ignore_errors: true
+  no_log: true
+
+- name: Display admin authentication test result
+  debug:
+    msg: "Admin user authentication: {{ 'SUCCESS' if admin_auth_test.failed is not defined else 'FAILED - User may not exist or wrong credentials' }}"
 
 - name: Move back mongod.conf
   template:
