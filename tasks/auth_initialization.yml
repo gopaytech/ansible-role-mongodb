@@ -15,7 +15,7 @@
 
 - name: Test MongoDB connection before creating users
   mongodb_info:
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   register: mongodb_connection_test
   ignore_errors: true
@@ -31,7 +31,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
@@ -54,7 +54,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
@@ -77,7 +77,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
