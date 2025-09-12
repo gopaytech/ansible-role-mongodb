@@ -13,6 +13,17 @@
 - name: Flush all handlers at this point
   meta: flush_handlers
 
+- name: Test MongoDB connection before creating users
+  mongodb_info:
+    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_port: "{{ mongodb_net_port | int }}"
+  register: mongodb_connection_test
+  ignore_errors: true
+
+- name: Display MongoDB connection status
+  debug:
+    msg: "MongoDB connection status: {{ 'SUCCESS' if mongodb_connection_test.failed is not defined else 'FAILED - ' + mongodb_connection_test.msg }}"
+
 - name: create administrative user "{{ mongodb_user_admin_name }}"
   mongodb_user:
     database: admin
@@ -29,6 +40,12 @@
       roles: "userAdminAnyDatabase"
       }
   no_log: true
+  register: user_admin_result
+  ignore_errors: true
+
+- name: Display user admin creation result (without sensitive data)
+  debug:
+    msg: "User admin creation: {{ 'SUCCESS' if user_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create administrative user "{{ mongodb_root_admin_name }}"
   mongodb_user:
@@ -46,6 +63,12 @@
       roles: "root"
       }
   no_log: true
+  register: root_admin_result
+  ignore_errors: true
+
+- name: Display root admin creation result (without sensitive data)
+  debug:
+    msg: "Root admin creation: {{ 'SUCCESS' if root_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create backup user "{{ mongodb_root_backup_name }}"
   mongodb_user:
@@ -63,6 +86,12 @@
       roles: "backup,clusterMonitor"
       }
   no_log: true
+  register: backup_user_result
+  ignore_errors: true
+
+- name: Display backup user creation result (without sensitive data)
+  debug:
+    msg: "Backup user creation: {{ 'SUCCESS' if backup_user_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: Move back mongod.conf
   template:
