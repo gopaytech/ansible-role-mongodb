@@ -61,7 +61,7 @@
     login_user: "{{ mongodb_root_admin_name if mongodb_security_authorization != 'disabled' else omit }}"
     login_password: "{{ mongodb_root_admin_password if mongodb_security_authorization != 'disabled' else omit }}"
     login_database: admin
-    script: |
+    eval: |
       db.adminCommand({
         "setDefaultRWConcern": 1,
         "defaultWriteConcern": { "w": 1 }
