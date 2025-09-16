@@ -31,14 +31,6 @@
       - "Resolved login_host: {{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
       - "mongodb_login_host (if set): {{ mongodb_login_host | default('NOT SET') }}"
 
-- name: Check community.mongodb collection version
-  ansible.builtin.command: ansible-galaxy collection list community.mongodb
-  register: mongodb_collection_version
-
-- name: Show community.mongodb version
-  ansible.builtin.debug:
-    msg: "{{ mongodb_collection_version.stdout }}"
-
 - name: create administrative user "{{ mongodb_user_admin_name }}"
   community.mongodb.mongodb_user:
     database: admin
