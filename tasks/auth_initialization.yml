@@ -46,7 +46,7 @@
       password: "{{ mongodb_user_admin_password }}",
       roles: "userAdminAnyDatabase"
       }
-  no_log: true
+  no_log: false
   register: user_admin_result
   ignore_errors: true
 
@@ -69,7 +69,7 @@
       password: "{{ mongodb_root_admin_password }}",
       roles: "root"
       }
-  no_log: true
+  no_log: false
   register: root_admin_result
   ignore_errors: true
 
