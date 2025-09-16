@@ -20,9 +20,17 @@
   register: mongodb_connection_test
   ignore_errors: true
 
+# - name: Display MongoDB connection status
+#   debug:
+#     msg: "MongoDB connection status: {{ 'SUCCESS' if mongodb_connection_test.failed is not defined else 'FAILED - ' + mongodb_connection_test.msg }}"
 - name: Display MongoDB connection status
   debug:
-    msg: "MongoDB connection status: {{ 'SUCCESS' if mongodb_connection_test.failed is not defined else 'FAILED - ' + mongodb_connection_test.msg }}"
+    msg: >-
+      MongoDB connection status:
+      {{ 'SUCCESS'
+         if (mongodb_connection_test is defined and not mongodb_connection_test.failed | default(false))
+         else 'FAILED - ' ~ (mongodb_connection_test.msg | default(mongodb_connection_test.stderr | default('unknown error')))
+      }}
 
 - name: Debug IP addresses being used
   debug:
