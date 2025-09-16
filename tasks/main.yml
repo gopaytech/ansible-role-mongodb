@@ -51,7 +51,7 @@
     - mongodb_replication_replset | length > 0
     - mongodb_master is defined and mongodb_master
     - mongodb_sharding_enabled is false
-  no_log: true
+  no_log: false
   tags: [mongodb]
 
 - name: Include replication configuration
