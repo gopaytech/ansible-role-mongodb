@@ -32,7 +32,7 @@
       - "mongodb_login_host (if set): {{ mongodb_login_host | default('NOT SET') }}"
 
 - name: create administrative user "{{ mongodb_user_admin_name }}"
-  mongodb_user:
+  community.general.mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -55,7 +55,7 @@
     msg: "User admin creation: {{ 'SUCCESS' if user_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create administrative user "{{ mongodb_root_admin_name }}"
-  mongodb_user:
+  community.general.mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -78,7 +78,7 @@
     msg: "Root admin creation: {{ 'SUCCESS' if root_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create backup user "{{ mongodb_root_backup_name }}"
-  mongodb_user:
+  community.general.mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
