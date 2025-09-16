@@ -131,7 +131,7 @@
     --eval 'db.getSiblingDB("{{ item.database }}").createUser({
       user: "{{ item.name }}",
       pwd: "{{ item.password }}",
-      roles: {{ item.roles | to_json }}
+      roles: {{ (item.roles is string) | ternary([item.roles], item.roles) | to_json }}
     })'
   loop: "{{ mongodb_users | default([]) }}"
   ignore_errors: yes
