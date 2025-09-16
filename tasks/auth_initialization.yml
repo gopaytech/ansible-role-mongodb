@@ -54,7 +54,7 @@
       password: "{{ mongodb_user_admin_password }}",
       roles: "userAdminAnyDatabase"
       }
-  no_log: false
+  no_log: true
   register: user_admin_result
   ignore_errors: true
 
@@ -77,7 +77,7 @@
       password: "{{ mongodb_root_admin_password }}",
       roles: "root"
       }
-  no_log: false
+  no_log: true
   register: root_admin_result
   ignore_errors: true
 
@@ -138,7 +138,7 @@
   when: ( mongodb_replication_replset
         and mongodb_security_authorization == 'enabled'
         and mongodb_master is defined and mongodb_master )
-  no_log: false
+  no_log: true
   tags: [mongodb]
 
 - name: create normal users without replicaset
