@@ -178,12 +178,6 @@
   no_log: true
   tags: [mongodb]
 
-- name: create mongodb exporter user for prometheus monitoring
-  community.mongodb.mongodb_user:
-    database: admin
-    name: "{{ mongodb_exporter_user_name }}"
-    password: "{{ mongodb
-
 - name: Move back mongod.conf
   template:
     src: mongod.conf.j2
