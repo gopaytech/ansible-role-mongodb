@@ -40,7 +40,7 @@
       - "mongodb_login_host (if set): {{ mongodb_login_host | default('NOT SET') }}"
 
 - name: create administrative user "{{ mongodb_user_admin_name }}"
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -63,7 +63,7 @@
     msg: "User admin creation: {{ 'SUCCESS' if user_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create administrative user "{{ mongodb_root_admin_name }}"
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -86,7 +86,7 @@
     msg: "Root admin creation: {{ 'SUCCESS' if root_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create backup user "{{ mongodb_root_backup_name }}"
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: admin
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -124,7 +124,7 @@
     msg: "Admin user authentication: {{ 'SUCCESS' if admin_auth_test.failed is not defined else 'FAILED - User may not exist or wrong credentials' }}"
 
 - name: create normal users with replicaset
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: "{{ item.database }}"
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -142,7 +142,7 @@
   tags: [mongodb]
 
 - name: create normal users without replicaset
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: "{{ item.database }}"
     name: "{{ item.name }}"
     password: "{{ item.password }}"
@@ -159,7 +159,7 @@
   tags: [mongodb]
 
 - name: create oplog user with replicaset
-  community.mongodb.mongodb_user:
+  mongodb_user:
     database: admin
     user: "{{ item.user }}"
     password: "{{ item.password }}"
