@@ -17,7 +17,7 @@
     ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
   when: mongodb_security_authorization == 'enabled'
   with_items:
-    - "{{ mongodb_replication_params|default([]) }}"
+    - "{{ [mongodb_replication_params] if mongodb_replication_params is mapping else mongodb_replication_params|default([]) }}"
 
 - name: Replication configuration without auth on master
   mongodb_replication:
@@ -35,22 +35,8 @@
   when: ( mongodb_security_authorization == 'disabled'
         and mongodb_master is defined and mongodb_master )
   with_items:
-    - "{{ mongodb_replication_params|default([]) }}"
+    - "{{ [mongodb_replication_params] if mongodb_replication_params is mapping else mongodb_replication_params|default([]) }}"
 
-- name: Replication configuration without auth on replicas and arbiters
-  mongodb_replication:
-    build_indexes: "{{ item.build_indexes|default(omit) }}"
-    login_host: "{{ mongodb_login_host|default('localhost') }}"
-    login_port: "{{ mongodb_login_port|default(27017) }}"
-    replica_set: "{{ mongodb_replication_replset }}"
-    host_name: "{{ item.host_name }}"
-    host_port: "{{ item.host_port|default(27017) }}"
-    host_type: "{{ item.host_type|default('replica') }}"
-    hidden: "{{ item.hidden|default(false) }}"
-    priority: "{{ item.priority|default(1.0) }}"
-    votes: "{{ item.votes|default(omit) }}"
-    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
-  when: ( mongodb_security_authorization == 'disabled'
-        and ( mongodb_master is not defined or not mongodb_master) )
-  with_items:
-    - "{{ mongodb_replication_params|default([]) }}"
+# NOTE: For disabled auth, only master should initialize the replica set
+# Secondary nodes will automatically join once they see the replica set config
+# This task is intentionally removed - replica set initialization should only happen on master
