@@ -32,11 +32,6 @@
     priority: "{{ item.priority|default(1.0) }}"
     votes: "{{ item.votes|default(omit) }}"
     ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
-  when: ( mongodb_security_authorization == 'disabled'
-        and mongodb_master is defined and mongodb_master )
+  when: mongodb_security_authorization == 'disabled'
   with_items:
     - "{{ [mongodb_replication_params] if mongodb_replication_params is mapping else mongodb_replication_params|default([]) }}"
-
-# NOTE: For disabled auth, only master should initialize the replica set
-# Secondary nodes will automatically join once they see the replica set config
-# This task is intentionally removed - replica set initialization should only happen on master
