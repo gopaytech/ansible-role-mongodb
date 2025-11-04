@@ -54,6 +54,11 @@
 #   no_log: false
 #   tags: [mongodb]
 
+- name: Include replication configuration
+  include_tasks: replication.yml
+  when: mongodb_replication_replset | length > 0
+  tags: [mongodb]
+
 - name: Set default read-write concern
   community.mongodb.mongodb_shell:
     login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
@@ -72,11 +77,6 @@
     - mongodb_master is defined and mongodb_master
     - mongodb_sharding_enabled is false
   no_log: true
-  tags: [mongodb]
-
-- name: Include replication configuration
-  include_tasks: replication.yml
-  when: mongodb_replication_replset | length > 0
   tags: [mongodb]
 
 - name: Check whether admin user is already exist
