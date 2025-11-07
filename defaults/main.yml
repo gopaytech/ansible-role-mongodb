@@ -28,7 +28,7 @@ mongodb_apt_key_url:
   
 
 mongodb_pymongo_from_pip: true                  # Use system package for better compatibility
-mongodb_pymongo_pip_version: 3.11.4             # Compatible version for Ansible modules
+mongodb_pymongo_pip_version: 3.12.3             # Compatible version for Ansible modules
 
 mongodb_user_update_password: "on_create"        # MongoDB user password update default policy
 mongodb_manage_service: true

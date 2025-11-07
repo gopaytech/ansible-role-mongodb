@@ -89,13 +89,13 @@
     - ansible_distribution == 'Debian'
     - ansible_distribution_release == 'buster'
 
-# Always use apt for Ubuntu 20 and newer to avoid PEP 668 pip issues and ensure system stability
-- name: Forcefully set mongodb_pymongo_from_pip to false on Ubuntu 20+
+# Always use apt for Ubuntu 24 and newer to ensure compatibility
+- name: Forcefully set mongodb_pymongo_from_pip to false on Ubuntu 24+
   set_fact:
     mongodb_pymongo_from_pip: false
   when:
     - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version | int >= 20
+    - ansible_distribution_major_version | int >= 24
 
 - name: Install PyMongo package
   apt:
@@ -109,7 +109,7 @@
     pkg: "{{ mongodb_pymongo_deps }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
 
 # TODO: check if it is still needed for Debian/Ubuntu
 - name: Install setuptools (required for ansible 2.7+)
@@ -117,7 +117,7 @@
     pkg: "{{ mongodb_python_setuptools }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
 
 - name: Install PyMongo from PIP
   pip:
@@ -128,4 +128,4 @@
     executable: "{{ mongodb_pip_executable }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 20)
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
