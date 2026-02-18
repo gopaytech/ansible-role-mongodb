@@ -52,3 +52,9 @@
     version: "{{ mongodb_pymongo_pip_version | default(omit) }}"
     executable: "{{ mongodb_pip_executable }}"
   when: mongodb_pymongo_from_pip | bool
+
+- name: Install looseversion from PIP
+  pip:
+    name: looseversion
+    executable: "{{ mongodb_pip_executable }}"
+  when: mongodb_pymongo_from_pip | bool

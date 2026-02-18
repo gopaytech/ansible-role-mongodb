@@ -50,6 +50,7 @@
     - mongodb_sharding_enabled is false
     - mongodb_security_authorization == 'enabled'
   no_log: true
+  changed_when: false
   tags: [mongodb]
 
 - name: Set default read-write concern when auth is not enabled
@@ -63,6 +64,7 @@
     - mongodb_sharding_enabled is false
     - mongodb_security_authorization != 'enabled'
   no_log: true
+  changed_when: false
   tags: [mongodb]
 
 - name: Include replication configuration
@@ -163,5 +165,5 @@
   tags: [mongodb]
 
 - name: Register shard members
-  include: sharding.yml
+  include_tasks: sharding.yml
   when: mongodb_use_mongos

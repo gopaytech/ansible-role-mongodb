@@ -164,7 +164,6 @@ import os
 import time
 import traceback
 from datetime import datetime as dtdatetime
-from distutils.version import LooseVersion
 
 try:
     from pymongo.errors import ConnectionFailure, OperationFailure, AutoReconnect, ServerSelectionTimeoutError
@@ -180,6 +179,7 @@ except ImportError:
 else:
     pymongo_found = True
 
+from looseversion import LooseVersion
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six.moves import configparser
 from ansible.module_utils._text import to_native
@@ -190,12 +190,6 @@ from ansible.module_utils._text import to_native
 
 
 def check_compatibility(module, client):
-    """Check the compatibility between the driver and the database.
-       See: https://docs.mongodb.com/ecosystem/drivers/driver-compatibility-reference/#python-driver-compatibility
-    Args:
-        module: Ansible module.
-        client (cursor): Mongodb cursor on admin database.
-    """
     loose_srv_version = LooseVersion(client.server_info()['version'])
     loose_driver_version = LooseVersion(PyMongoVersion)
 
@@ -336,10 +330,13 @@ def load_mongocnf():
 
 def wait_for_ok_and_master(module, connection_params, timeout=180):
     start_time = dtdatetime.now()
+    poll_params = dict(connection_params)
+    poll_params.pop('replicaset', None)
+    poll_params['directConnection'] = True
     while True:
         client = None
         try:
-            client = MongoClient(**connection_params)
+            client = MongoClient(**poll_params)
             status = client.admin.command('replSetGetStatus', check=False)
             if status['ok'] == 1 and status['myState'] == 1:
                 return
@@ -428,16 +425,19 @@ def main():
             connection_params = {
                 "host": login_host,
                 "port": int(login_port),
-                "username": login_user,
-                "password": login_password,
-                "authsource": login_database,
                 "serverselectiontimeoutms": 5000,
                 "replicaset": replica_set,
             }
+            if login_user is not None and login_password is not None:
+                connection_params["username"] = login_user
+                connection_params["password"] = login_password
+                connection_params["authsource"] = login_database
 
         if ssl:
             connection_params["tls"] = ssl
             connection_params["tlsAllowInvalidCertificates"] = module.params['ssl_cert_reqs'] == 'CERT_NONE'
+
+        rs_connection_params = dict(connection_params)
 
         client = MongoClient(**connection_params)
         client['admin'].command('replSetGetStatus')
@@ -447,11 +447,13 @@ def main():
             connection_params = {
                 "host": login_host,
                 "port": int(login_port),
-                "username": login_user,
-                "password": login_password,
-                "authsource": login_database,
                 "serverselectiontimeoutms": 10000,
+                "directConnection": True,
             }
+            if login_user is not None and login_password is not None:
+                connection_params["username"] = login_user
+                connection_params["password"] = login_password
+                connection_params["authsource"] = login_database
 
             if ssl:
                 connection_params["tls"] = ssl
@@ -473,8 +475,7 @@ def main():
     except ConnectionFailure as e:
         module.fail_json(msg='unable to connect to database: %s' % to_native(e), exception=traceback.format_exc())
 
-    # reconnect again
-    client = MongoClient(**connection_params)
+    client = MongoClient(**rs_connection_params)
     check_compatibility(module, client)
     check_members(state, module, client, host_name, host_port, host_type)
 

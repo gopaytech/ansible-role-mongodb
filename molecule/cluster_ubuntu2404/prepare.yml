@@ -1,0 +1,13 @@
+---
+- hosts: all
+  remote_user: root
+  become: yes
+  tasks:
+    - name: Install prerequisite packages for molecule testing on Ubuntu
+      apt:
+        update_cache: true
+        name:
+          - gpg
+          - dirmngr
+          - curl
+          - gnupg
