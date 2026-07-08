@@ -161,11 +161,9 @@ host_type:
 '''
 
 import os
-import ssl as ssl_lib
 import time
 import traceback
 from datetime import datetime as dtdatetime
-from distutils.version import LooseVersion
 
 try:
     from pymongo.errors import ConnectionFailure, OperationFailure, AutoReconnect, ServerSelectionTimeoutError
@@ -181,6 +179,7 @@ except ImportError:
 else:
     pymongo_found = True
 
+from looseversion import LooseVersion
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six.moves import configparser
 from ansible.module_utils._text import to_native
@@ -191,12 +190,6 @@ from ansible.module_utils._text import to_native
 
 
 def check_compatibility(module, client):
-    """Check the compatibility between the driver and the database.
-       See: https://docs.mongodb.com/ecosystem/drivers/driver-compatibility-reference/#python-driver-compatibility
-    Args:
-        module: Ansible module.
-        client (cursor): Mongodb cursor on admin database.
-    """
     loose_srv_version = LooseVersion(client.server_info()['version'])
     loose_driver_version = LooseVersion(PyMongoVersion)
 
@@ -222,7 +215,7 @@ def check_compatibility(module, client):
 def check_members(state, module, client, host_name, host_port, host_type):
     local_db = client['local']
 
-    if local_db.system.replset.count() > 1:
+    if local_db.system.replset.count_documents({}) > 1:
         module.fail_json(msg='local.system.replset has unexpected contents')
 
     cfg = local_db.system.replset.find_one()
@@ -253,7 +246,7 @@ def add_host(module, client, host_name, host_port, host_type, timeout=180, **kwa
             admin_db = client['admin']
             local_db = client['local']
 
-            if local_db.system.replset.count() > 1:
+            if local_db.system.replset.count_documents({}) > 1:
                 module.fail_json(msg='local.system.replset has unexpected contents')
 
             cfg = local_db.system.replset.find_one()
@@ -296,7 +289,7 @@ def remove_host(module, client, host_name, timeout=180):
         try:
             local_db = client['local']
 
-            if local_db.system.replset.count() > 1:
+            if local_db.system.replset.count_documents({}) > 1:
                 module.fail_json(msg='local.system.replset has unexpected contents')
 
             cfg = local_db.system.replset.find_one()
@@ -337,19 +330,22 @@ def load_mongocnf():
 
 def wait_for_ok_and_master(module, connection_params, timeout=180):
     start_time = dtdatetime.now()
+    poll_params = dict(connection_params)
+    poll_params.pop('replicaset', None)
+    poll_params['directConnection'] = True
     while True:
+        client = None
         try:
-            client = MongoClient(**connection_params)
-            authenticate(module, client, connection_params["username"], connection_params["password"])
-
+            client = MongoClient(**poll_params)
             status = client.admin.command('replSetGetStatus', check=False)
             if status['ok'] == 1 and status['myState'] == 1:
                 return
 
         except ServerSelectionTimeoutError:
             pass
-
-        client.close()
+        finally:
+            if client:
+                client.close()
 
         if (dtdatetime.now() - start_time).seconds > timeout:
             module.fail_json(msg='reached timeout while waiting for rs.status() to become ok=1')
@@ -357,17 +353,22 @@ def wait_for_ok_and_master(module, connection_params, timeout=180):
         time.sleep(1)
 
 
-def authenticate(module, client, login_user, login_password):
+def get_mongodb_credentials(module, login_user, login_password):
+    """Get MongoDB credentials from parameters or .mongodb.cnf file.
+    
+    Returns a tuple of (login_user, login_password).
+    In pymongo4+, authentication is done via MongoClient constructor,
+    not via client.admin.authenticate().
+    """
     if login_user is None and login_password is None:
         mongocnf_creds = load_mongocnf()
         if mongocnf_creds is not False:
             login_user = mongocnf_creds['user']
             login_password = mongocnf_creds['password']
-        elif login_password is None and login_user is not None:
-            module.fail_json(msg='when supplying login arguments, both login_user and login_password must be provided')
+    elif login_password is None and login_user is not None:
+        module.fail_json(msg='when supplying login arguments, both login_user and login_password must be provided')
 
-    if login_user is not None and login_password is not None:
-        client.admin.authenticate(login_user, login_password)
+    return login_user, login_password
 
 # =========================================
 # Module execution.
@@ -415,6 +416,8 @@ def main():
 
     replica_set_created = False
 
+    login_user, login_password = get_mongodb_credentials(module, login_user, login_password)
+
     try:
         if replica_set is None:
             module.fail_json(msg='replica_set parameter is required')
@@ -422,19 +425,21 @@ def main():
             connection_params = {
                 "host": login_host,
                 "port": int(login_port),
-                "username": login_user,
-                "password": login_password,
-                "authsource": login_database,
                 "serverselectiontimeoutms": 5000,
                 "replicaset": replica_set,
             }
+            if login_user is not None and login_password is not None:
+                connection_params["username"] = login_user
+                connection_params["password"] = login_password
+                connection_params["authsource"] = login_database
 
         if ssl:
-            connection_params["ssl"] = ssl
-            connection_params["ssl_cert_reqs"] = getattr(ssl_lib, module.params['ssl_cert_reqs'])
+            connection_params["tls"] = ssl
+            connection_params["tlsAllowInvalidCertificates"] = module.params['ssl_cert_reqs'] == 'CERT_NONE'
+
+        rs_connection_params = dict(connection_params)
 
         client = MongoClient(**connection_params)
-        authenticate(module, client, login_user, login_password)
         client['admin'].command('replSetGetStatus')
 
     except ServerSelectionTimeoutError:
@@ -442,18 +447,19 @@ def main():
             connection_params = {
                 "host": login_host,
                 "port": int(login_port),
-                "username": login_user,
-                "password": login_password,
-                "authsource": login_database,
                 "serverselectiontimeoutms": 10000,
+                "directConnection": True,
             }
+            if login_user is not None and login_password is not None:
+                connection_params["username"] = login_user
+                connection_params["password"] = login_password
+                connection_params["authsource"] = login_database
 
             if ssl:
-                connection_params["ssl"] = ssl
-                connection_params["ssl_cert_reqs"] = getattr(ssl_lib, module.params['ssl_cert_reqs'])
+                connection_params["tls"] = ssl
+                connection_params["tlsAllowInvalidCertificates"] = module.params['ssl_cert_reqs'] == 'CERT_NONE'
 
             client = MongoClient(**connection_params)
-            authenticate(module, client, login_user, login_password)
             if state == 'present':
                 new_host = {'_id': 0, 'host': "{0}:{1}".format(host_name, host_port)}
                 if priority != 1.0:
@@ -469,9 +475,7 @@ def main():
     except ConnectionFailure as e:
         module.fail_json(msg='unable to connect to database: %s' % to_native(e), exception=traceback.format_exc())
 
-    # reconnect again
-    client = MongoClient(**connection_params)
-    authenticate(module, client, login_user, login_password)
+    client = MongoClient(**rs_connection_params)
     check_compatibility(module, client)
     check_members(state, module, client, host_name, host_port, host_type)
 

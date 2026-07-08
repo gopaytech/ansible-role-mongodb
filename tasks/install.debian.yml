@@ -129,3 +129,11 @@
   when:
     - mongodb_pymongo_from_pip | bool
     - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
+
+- name: Install looseversion from PIP
+  pip:
+    name: looseversion
+    executable: "{{ mongodb_pip_executable }}"
+  when:
+    - mongodb_pymongo_from_pip | bool
+    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
