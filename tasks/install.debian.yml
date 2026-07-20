@@ -16,6 +16,26 @@
         (mongodb_version is not defined
          or mongodb_repository[mongodb_major_version] is not defined))
 
+# Older versions of this role used the apt_repository module, which wrote a
+# legacy one-line ".list" file with no Signed-By. That conflicts with the
+# deb822 source below (which sets Signed-By), so remove any such leftover.
+- name: Find legacy MongoDB APT list files
+  find:
+    paths: /etc/apt/sources.list.d
+    patterns: "*.list"
+    contains: ".*repo\\.mongodb\\.org.*"
+  register: mongodb_legacy_list_files
+  when: mongodb_package == 'mongodb-org'
+
+- name: Remove legacy MongoDB APT list files (superseded by deb822 source)
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ mongodb_legacy_list_files.files | default([]) }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: mongodb_package == 'mongodb-org'
+
 # Replaces the deprecated apt_key + apt_repository modules with a single
 # deb822_repository source. The GPG key is fetched from the MongoDB key URL
 # and stored in its own keyring (signed_by), instead of the global trusted.gpg.
