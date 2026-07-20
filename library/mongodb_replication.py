@@ -182,7 +182,7 @@ else:
 from looseversion import LooseVersion
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 from ansible.module_utils.six.moves import configparser
-from ansible.module_utils._text import to_native
+from ansible.module_utils.common.text.converters import to_native
 
 # =========================================
 # MongoDB module specific support methods.

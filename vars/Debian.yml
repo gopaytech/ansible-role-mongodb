@@ -6,6 +6,10 @@ mongodb_repository:
   "4.4": "deb http://repo.mongodb.org/apt/debian {{ ansible_facts['distribution_release'] }}/mongodb-org/4.4 main"
   "5.0": "deb http://repo.mongodb.org/apt/debian {{ ansible_facts['distribution_release'] }}/mongodb-org/5.0 main"
 
+# Components used to build the deb822 APT source (see tasks/install.debian.yml)
+mongodb_repository_uri: "http://repo.mongodb.org/apt/debian"
+mongodb_repository_component: main
+
 mongodb_pymongo_package: "{{ 'python3-pymongo' if ansible_facts['python'].version.major == 3 else 'python-pymongo' }}"
 mongodb_pymongo_deps:
   - "{{ 'python3-dev' if ansible_facts['python'].version.major == 3 else 'python-dev' }}"

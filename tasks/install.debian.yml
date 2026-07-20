@@ -9,13 +9,6 @@
     - mongodb_disable_transparent_hugepages | bool
     - ansible_facts['service_mgr'] == "systemd"
 
-- name: Add APT key
-  apt_key:
-    keyserver: "{{ mongodb_apt_keyserver if not mongodb_apt_key_from_url|bool else omit }}"
-    url: "{{ mongodb_apt_key_url[mongodb_major_version] if mongodb_apt_key_from_url|bool else omit }}"
-    id: "{{ mongodb_apt_key_id[mongodb_major_version] }}"
-  when: mongodb_package == 'mongodb-org'
-
 - name: Fail when used wrong mongodb_version variable
   fail:
     msg: "mongodb_version variable should be '3.2', '3.6', '4.0', '4.2', '4.4', '5.0', '6.0', '7.0' or '8.0'"
@@ -23,14 +16,28 @@
         (mongodb_version is not defined
          or mongodb_repository[mongodb_major_version] is not defined))
 
-- name: Add APT repository
-  apt_repository:
-    repo: "{{ mongodb_repository[version_item] }}"
-    update_cache: true
-  with_items: "{{ mongodb_major_version }}"
-  loop_control:
-    loop_var: version_item
+# Replaces the deprecated apt_key + apt_repository modules with a single
+# deb822_repository source. The GPG key is fetched from the MongoDB key URL
+# and stored in its own keyring (signed_by), instead of the global trusted.gpg.
+- name: Add MongoDB APT repository
+  deb822_repository:
+    name: "mongodb-org-{{ mongodb_major_version }}"
+    types: deb
+    uris: "{{ mongodb_repository_uri }}"
+    suites: "{{ ansible_facts['distribution_release'] }}/mongodb-org/{{ mongodb_major_version }}"
+    components: "{{ mongodb_repository_component }}"
+    signed_by: "{{ mongodb_apt_key_url[mongodb_major_version] }}"
+    state: present
+    enabled: true
+  register: mongodb_apt_repo
   when: mongodb_package == 'mongodb-org'
+
+- name: Update APT cache after adding MongoDB repository
+  apt:
+    update_cache: true
+  when:
+    - mongodb_package == 'mongodb-org'
+    - mongodb_apt_repo is changed
 
 - name: Install MongoDB package
   apt:
