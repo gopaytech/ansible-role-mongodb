@@ -40,7 +40,7 @@ mongodb_disable_transparent_hugepages: false
 
 mongodb_use_numa: true
 
-mongodb_user: "{{ 'mongod' if ('RedHat' == ansible_os_family) else 'mongodb' }}"
+mongodb_user: "{{ 'mongod' if ('RedHat' == ansible_facts['os_family']) else 'mongodb' }}"
 mongodb_uid:
 mongodb_gid:
 mongodb_daemon_name: "{{ 'mongod' if ('mongodb-org' in mongodb_package) else 'mongodb' }}"
@@ -59,7 +59,7 @@ mongodb_net_ssl_host: ""                         # Valid ssl hostname
 ## processManagement Options
 # Fork server process
 # Enabled by default for RedHat as the init scripts assume forking is enabled.
-mongodb_processmanagement_fork: "{{ 'RedHat' == ansible_os_family }}"
+mongodb_processmanagement_fork: "{{ 'RedHat' == ansible_facts['os_family'] }}"
 
 ## security Options
 # Disable or enable security. Possible values: 'disabled', 'enabled'

@@ -7,7 +7,7 @@
   include_tasks: disable_transparent_hugepages.yml
   when:
     - mongodb_disable_transparent_hugepages | bool
-    - ansible_service_mgr == "systemd"
+    - ansible_facts['service_mgr'] == "systemd"
 
 - name: Add APT key
   apt_key:
@@ -65,7 +65,7 @@
     group: root
     mode: '0644'
   when:
-    - ansible_service_mgr == "systemd"
+    - ansible_facts['service_mgr'] == "systemd"
     - mongodb_manage_systemd_unit | bool
   notify:
     - reload systemd
@@ -76,7 +76,7 @@
     dest: "/etc/systemd/system/multi-user.target.wants/{{ mongodb_daemon_name }}.service"
     state: link
   when:
-    - ansible_service_mgr == "systemd"
+    - ansible_facts['service_mgr'] == "systemd"
     - mongodb_manage_systemd_unit | bool
   notify:
     - reload systemd
@@ -86,16 +86,16 @@
   set_fact:
     mongodb_pymongo_from_pip: false
   when:
-    - ansible_distribution == 'Debian'
-    - ansible_distribution_release == 'buster'
+    - ansible_facts['distribution'] == 'Debian'
+    - ansible_facts['distribution_release'] == 'buster'
 
 # Always use apt for Ubuntu 24 and newer to ensure compatibility
 - name: Forcefully set mongodb_pymongo_from_pip to false on Ubuntu 24+
   set_fact:
     mongodb_pymongo_from_pip: false
   when:
-    - ansible_distribution == 'Ubuntu'
-    - ansible_distribution_major_version | int >= 24
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - ansible_facts['distribution_major_version'] | int >= 24
 
 - name: Install PyMongo package
   apt:
@@ -109,7 +109,7 @@
     pkg: "{{ mongodb_pymongo_deps }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int >= 24)
 
 # TODO: check if it is still needed for Debian/Ubuntu
 - name: Install setuptools (required for ansible 2.7+)
@@ -117,7 +117,7 @@
     pkg: "{{ mongodb_python_setuptools }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int >= 24)
 
 - name: Install PyMongo from PIP
   pip:
@@ -128,7 +128,7 @@
     executable: "{{ mongodb_pip_executable }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int >= 24)
 
 - name: Install looseversion from PIP
   pip:
@@ -136,7 +136,7 @@
     executable: "{{ mongodb_pip_executable }}"
   when:
     - mongodb_pymongo_from_pip | bool
-    - not (ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24)
+    - not (ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int >= 24)
 
 - name: Install looseversion from APT
   apt:
@@ -145,4 +145,4 @@
     update_cache: yes
   when:
     - not (mongodb_pymongo_from_pip | bool)
-    - ansible_distribution == 'Ubuntu' and ansible_distribution_major_version | int >= 24
+    - ansible_facts['distribution'] == 'Ubuntu' and ansible_facts['distribution_major_version'] | int >= 24

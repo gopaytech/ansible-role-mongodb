@@ -16,15 +16,15 @@
 - name: Include OS-specific variables
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_distribution_release }}.yml"
-    - "{{ ansible_distribution }}.yml"
-    - "{{ ansible_os_family }}.yml"
+    - "{{ ansible_facts['distribution_release'] }}.yml"
+    - "{{ ansible_facts['distribution'] }}.yml"
+    - "{{ ansible_facts['os_family'] }}.yml"
 
 - name: Include installation tasks
   include_tasks: "{{ item }}"
   with_first_found:
-    - "install.{{ ansible_distribution | lower }}.yml"
-    - "install.{{ ansible_os_family | lower }}.yml"
+    - "install.{{ ansible_facts['distribution'] | lower }}.yml"
+    - "install.{{ ansible_facts['os_family'] | lower }}.yml"
   tags: [mongodb]
 
 - name: Include configuration.yml
