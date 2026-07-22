@@ -16,15 +16,15 @@
 - name: Include OS-specific variables
   include_vars: "{{ item }}"
   with_first_found:
-    - "{{ ansible_distribution_release }}.yml"
-    - "{{ ansible_distribution }}.yml"
-    - "{{ ansible_os_family }}.yml"
+    - "{{ ansible_facts['distribution_release'] }}.yml"
+    - "{{ ansible_facts['distribution'] }}.yml"
+    - "{{ ansible_facts['os_family'] }}.yml"
 
 - name: Include installation tasks
   include_tasks: "{{ item }}"
   with_first_found:
-    - "install.{{ ansible_distribution | lower }}.yml"
-    - "install.{{ ansible_os_family | lower }}.yml"
+    - "install.{{ ansible_facts['distribution'] | lower }}.yml"
+    - "install.{{ ansible_facts['os_family'] | lower }}.yml"
   tags: [mongodb]
 
 - name: Include configuration.yml
@@ -39,37 +39,44 @@
   tags: [mongodb]
 
 # patch known issue default read-write concern on MongoDB Version > 5.0
-- name: Set default read-write concern
-  ansible.builtin.command: >
-    mongosh --quiet -u {{ mongodb_root_admin_name }} -p {{ mongodb_root_admin_password }}
-    --eval 'db.adminCommand({"setDefaultRWConcern": 1, "defaultWriteConcern": { "w": 1 }})'
-  when: 
-    - mongodb_version.split('.')[0] | int > 5
-    - mongodb_replication_replset | length > 0
-    - mongodb_master is defined and mongodb_master
-    - mongodb_sharding_enabled is false
-    - mongodb_security_authorization == 'enabled'
-  no_log: true
-  changed_when: false
-  tags: [mongodb]
-
-- name: Set default read-write concern when auth is not enabled
-  ansible.builtin.command: >
-    mongosh --quiet
-    --eval 'db.adminCommand({"setDefaultRWConcern": 1, "defaultWriteConcern": { "w": 1 }})'
-  when: 
-    - mongodb_version.split('.')[0] | int > 5
-    - mongodb_replication_replset | length > 0
-    - mongodb_master is defined and mongodb_master
-    - mongodb_sharding_enabled is false
-    - mongodb_security_authorization != 'enabled'
-  no_log: true
-  changed_when: false
-  tags: [mongodb]
+# - name: Set default read-write concern
+#   ansible.builtin.command: >
+#     mongosh --quiet
+#     {%- if mongodb_security_authorization != 'disabled' -%}
+#     -u {{ mongodb_root_admin_name }} -p {{ mongodb_root_admin_password }}
+#     {%- endif -%}
+#     --eval 'db.adminCommand({"setDefaultRWConcern": 1, "defaultWriteConcern": { "w": 1 }})'
+#   when:
+#     - mongodb_version.split('.')[0] | int > 5
+#     - mongodb_replication_replset | length > 0
+#     - mongodb_master is defined and mongodb_master
+#     - mongodb_sharding_enabled is false
+#   no_log: false
+#   tags: [mongodb]
 
 - name: Include replication configuration
   include_tasks: replication.yml
   when: mongodb_replication_replset | length > 0
+  tags: [mongodb]
+
+- name: Set default read-write concern
+  community.mongodb.mongodb_shell:
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    login_user: "{{ mongodb_root_admin_name if mongodb_security_authorization != 'disabled' else omit }}"
+    login_password: "{{ mongodb_root_admin_password if mongodb_security_authorization != 'disabled' else omit }}"
+    login_database: admin
+    eval: |
+      db.adminCommand({
+        "setDefaultRWConcern": 1,
+        "defaultWriteConcern": { "w": 1 }
+      })
+  when: 
+    - mongodb_version.split('.')[0] | int > 5
+    - mongodb_replication_replset | length > 0
+    - mongodb_master is defined and mongodb_master
+    - mongodb_sharding_enabled is false
+  no_log: true
   tags: [mongodb]
 
 - name: Check whether admin user is already exist
@@ -90,67 +97,6 @@
   when: ( mongodb_security_authorization == 'enabled'
           and not mongodb_replication_replset
           and mongodb_user_admin_check.rc != 0 )
-  tags: [mongodb]
-
-- name: create normal users with replicaset
-  mongodb_user:
-    database: "{{ item.database }}"
-    name: "{{ item.name }}"
-    password: "{{ item.password }}"
-    update_password: "{{ mongodb_user_update_password }}"
-    roles: "{{ item.roles }}"
-    login_user: "{{ mongodb_user_admin_name }}"
-    login_password: "{{ mongodb_user_admin_password }}"
-    login_port: "{{ mongodb_login_port|default(27017) }}"
-    login_host: "{{ mongodb_login_host|default('localhost') }}"
-    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
-  with_items:
-    - "{{ mongodb_users | default([]) }}"
-  when: ( mongodb_replication_replset
-        and mongodb_security_authorization == 'enabled'
-        and mongodb_master is defined and mongodb_master )
-  no_log: true
-  tags: [mongodb]
-
-- name: create normal users without replicaset
-  mongodb_user:
-    database: "{{ item.database }}"
-    name: "{{ item.name }}"
-    password: "{{ item.password }}"
-    update_password: "{{ mongodb_user_update_password }}"
-    roles: "{{ item.roles }}"
-    login_user: "{{ mongodb_user_admin_name }}"
-    login_password: "{{ mongodb_user_admin_password }}"
-    login_port: "{{ mongodb_net_port | int }}"
-    login_host: "{{ mongodb_login_host|default('localhost') }}"
-    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
-  with_items:
-    - "{{ mongodb_users | default([]) }}"
-  when: ( mongodb_security_authorization == 'enabled'
-          and not mongodb_replication_replset )
-  no_log: true
-  tags: [mongodb]
-
-- name: create oplog user with replicaset
-  mongodb_user:
-    database: admin
-    user: "{{ item.user }}"
-    password: "{{ item.password }}"
-    update_password: "{{ mongodb_user_update_password }}"
-    roles:
-      - db: local
-        role: read
-    login_user: "{{ mongodb_user_admin_name }}"
-    login_password: "{{ mongodb_user_admin_password }}"
-    login_port: "{{ mongodb_login_port|default(27017) }}"
-    login_host: "{{ mongodb_login_host|default('localhost') }}"
-    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
-  with_items:
-    - "{{ mongodb_oplog_users | default([]) }}"
-  when: ( mongodb_replication_replset | length > 0
-        and mongodb_security_authorization == 'enabled'
-        and mongodb_master is defined and mongodb_master )
-  no_log: true
   tags: [mongodb]
 
 - name: service started
