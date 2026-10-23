@@ -50,6 +50,13 @@ mongodb_pymongo_pip_version: 3.6.1 # Choose PyMong version to install from pip. 
 mongodb_user_update_password: "on_create" # MongoDB user password update default policy
 mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
+mongodb_systemd_unit_after: "nss-lookup.target systemd-resolved.service" # Appended to After=network-online.target
+mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
+mongodb_systemd_unit_requires_mounts_for: "" # Wait for these mount paths before starting, e.g. the data dir
+mongodb_systemd_unit_timeout_start_sec: "" # Optional TimeoutStartSec, raise for large datasets
+mongodb_systemd_unit_timeout_stop_sec: "" # Optional TimeoutStopSec
+mongodb_systemd_unit_kill_mode: "" # Optional KillMode
+mongodb_systemd_unit_kill_signal: "" # Optional KillSignal
 
 # Disable transparent hugepages on systemd debian based installations
 mongodb_disable_transparent_hugepages: false

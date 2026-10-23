@@ -35,6 +35,15 @@ mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
 mongodb_systemd_unit_limit_nofile: 64000
 mongodb_systemd_unit_limit_nproc: 64000
+# Ordering/dependencies, to avoid NodeNotFound (code 74) when the hostname is resolved before the resolver is up on boot
+mongodb_systemd_unit_after: "nss-lookup.target systemd-resolved.service"   # Appended to After=network-online.target
+mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
+mongodb_systemd_unit_requires_mounts_for: ""     # e.g. "{{ mongodb_storage_dbpath }}" to wait for the data mount
+# Optional, unset by default. Raise for large datasets so systemd does not SIGKILL during startup recovery or shutdown flush
+mongodb_systemd_unit_timeout_start_sec: ""
+mongodb_systemd_unit_timeout_stop_sec: ""
+mongodb_systemd_unit_kill_mode: ""               # control-group, process, mixed or none
+mongodb_systemd_unit_kill_signal: ""             # e.g. SIGTERM
 
 mongodb_disable_transparent_hugepages: false
 

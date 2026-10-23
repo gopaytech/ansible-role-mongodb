@@ -2,7 +2,14 @@
 [Unit]
 Description=An object/document-oriented database
 Documentation=man:mongod(1)
-After=network-online.target
+After=network-online.target{% if mongodb_systemd_unit_after | length > 0 %} {{ mongodb_systemd_unit_after }}{% endif %}
+
+{% if mongodb_systemd_unit_wants | length > 0 %}
+Wants={{ mongodb_systemd_unit_wants }}
+{% endif %}
+{% if mongodb_systemd_unit_requires_mounts_for | length > 0 %}
+RequiresMountsFor={{ mongodb_systemd_unit_requires_mounts_for }}
+{% endif %}
 
 [Service]
 User={{ mongodb_user }}
@@ -34,6 +41,18 @@ LimitMEMLOCK=infinity
 # total threads (user+kernel)
 TasksMax=infinity
 TasksAccounting=false
+{% if mongodb_systemd_unit_timeout_start_sec | string | length > 0 %}
+TimeoutStartSec={{ mongodb_systemd_unit_timeout_start_sec }}
+{% endif %}
+{% if mongodb_systemd_unit_timeout_stop_sec | string | length > 0 %}
+TimeoutStopSec={{ mongodb_systemd_unit_timeout_stop_sec }}
+{% endif %}
+{% if mongodb_systemd_unit_kill_mode | length > 0 %}
+KillMode={{ mongodb_systemd_unit_kill_mode }}
+{% endif %}
+{% if mongodb_systemd_unit_kill_signal | length > 0 %}
+KillSignal={{ mongodb_systemd_unit_kill_signal }}
+{% endif %}
 
 # Recommended limits for for mongod as specified in
 # http://docs.mongodb.org/manual/reference/ulimit/#recommended-settings
