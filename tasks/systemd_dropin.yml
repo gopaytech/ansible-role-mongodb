@@ -1,0 +1,19 @@
+---
+
+- name: Create systemd drop-in directory
+  file:
+    path: "/etc/systemd/system/{{ mongodb_daemon_name }}.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Add systemd drop-in for ordering, restart policy and timeouts
+  template:
+    src: mongodb-restart.conf.j2
+    dest: "/etc/systemd/system/{{ mongodb_daemon_name }}.service.d/10-restart.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - reload systemd

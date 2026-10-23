@@ -13,6 +13,39 @@
           and mongodb_net_ssl_host != mongodb_login_host
           and not mongodb_replication_replset )
 
+- name: Check systemd unit restart settings are plain seconds
+  fail:
+    msg: 'mongodb_systemd_unit_restart_sec, mongodb_systemd_unit_start_limit_burst and mongodb_systemd_unit_start_limit_interval_sec must be plain numbers of seconds, not time spans like 10s or 1min!'
+  when:
+    - ansible_service_mgr == "systemd"
+    - mongodb_manage_systemd_unit | bool
+    - mongodb_systemd_unit_restart | length > 0
+    - >-
+      [mongodb_systemd_unit_restart_sec, mongodb_systemd_unit_start_limit_burst,
+      mongodb_systemd_unit_start_limit_interval_sec]
+      | map('string') | reject('equalto', '') | reject('match', '^[0-9]+$') | list | length > 0
+
+- name: Check systemd unit restart limits
+  fail:
+    msg: 'mongodb_systemd_unit_start_limit_interval_sec must be greater than mongodb_systemd_unit_start_limit_burst * mongodb_systemd_unit_restart_sec!'
+  when:
+    - ansible_service_mgr == "systemd"
+    - mongodb_manage_systemd_unit | bool
+    - mongodb_systemd_unit_restart | length > 0
+    - mongodb_systemd_unit_restart_sec | string | length > 0
+    - mongodb_systemd_unit_start_limit_burst | string | length > 0
+    - mongodb_systemd_unit_start_limit_interval_sec | string | length > 0
+    - ( mongodb_systemd_unit_start_limit_interval_sec | int <= mongodb_systemd_unit_start_limit_burst | int * mongodb_systemd_unit_restart_sec | int )
+
+- name: Check value of variable mongodb_systemd_unit_kill_mode
+  fail:
+    msg: 'Set mongodb_systemd_unit_kill_mode to control-group, process or mixed!'
+  when:
+    - ansible_service_mgr == "systemd"
+    - mongodb_manage_systemd_unit | bool
+    - mongodb_systemd_unit_kill_mode | length > 0
+    - mongodb_systemd_unit_kill_mode not in ['control-group', 'process', 'mixed']
+
 - name: Include OS-specific variables
   include_vars: "{{ item }}"
   with_first_found:
@@ -25,6 +58,13 @@
   with_first_found:
     - "install.{{ ansible_distribution | lower }}.yml"
     - "install.{{ ansible_os_family | lower }}.yml"
+  tags: [mongodb]
+
+- name: Include systemd drop-in configuration
+  include_tasks: systemd_dropin.yml
+  when:
+    - ansible_service_mgr == "systemd"
+    - mongodb_manage_systemd_unit | bool
   tags: [mongodb]
 
 - name: Include configuration.yml
