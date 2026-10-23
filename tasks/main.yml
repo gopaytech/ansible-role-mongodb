@@ -43,6 +43,13 @@
     - "install.{{ ansible_os_family | lower }}.yml"
   tags: [mongodb]
 
+- name: Include systemd drop-in configuration
+  include_tasks: systemd_dropin.yml
+  when:
+    - ansible_service_mgr == "systemd"
+    - mongodb_manage_systemd_unit | bool
+  tags: [mongodb]
+
 - name: Include configuration.yml
   include_tasks: configure.yml
   tags: [mongodb]

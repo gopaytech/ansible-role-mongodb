@@ -50,7 +50,7 @@ mongodb_pymongo_pip_version: 3.6.1 # Choose PyMong version to install from pip. 
 mongodb_user_update_password: "on_create" # MongoDB user password update default policy
 mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
-mongodb_systemd_unit_after: "nss-lookup.target systemd-resolved.service" # Appended to After=network-online.target
+mongodb_systemd_unit_after: "network-online.target nss-lookup.target systemd-resolved.service"   # Written to the 10-restart.conf drop-in
 mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
 mongodb_systemd_unit_requires_mounts_for: "{{ mongodb_storage_dbpath }}" # Wait for the data mount before starting
 mongodb_systemd_unit_restart: on-failure # Restart= policy, empty omits it
