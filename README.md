@@ -52,7 +52,11 @@ mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
 mongodb_systemd_unit_after: "nss-lookup.target systemd-resolved.service" # Appended to After=network-online.target
 mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
-mongodb_systemd_unit_requires_mounts_for: "" # Wait for these mount paths before starting, e.g. the data dir
+mongodb_systemd_unit_requires_mounts_for: "{{ mongodb_storage_dbpath }}" # Wait for the data mount before starting
+mongodb_systemd_unit_restart: on-failure # Restart= policy, empty omits it
+mongodb_systemd_unit_restart_sec: 10
+mongodb_systemd_unit_start_limit_burst: 5
+mongodb_systemd_unit_start_limit_interval_sec: 60 # Must be greater than burst * restart_sec
 mongodb_systemd_unit_timeout_start_sec: "" # Optional TimeoutStartSec, raise for large datasets
 mongodb_systemd_unit_timeout_stop_sec: "" # Optional TimeoutStopSec
 mongodb_systemd_unit_kill_mode: "" # Optional KillMode

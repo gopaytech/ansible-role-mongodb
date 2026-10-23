@@ -10,9 +10,21 @@ Wants={{ mongodb_systemd_unit_wants }}
 {% if mongodb_systemd_unit_requires_mounts_for | length > 0 %}
 RequiresMountsFor={{ mongodb_systemd_unit_requires_mounts_for }}
 {% endif %}
+{% if mongodb_systemd_unit_start_limit_burst | string | length > 0 %}
+StartLimitBurst={{ mongodb_systemd_unit_start_limit_burst }}
+{% endif %}
+{% if mongodb_systemd_unit_start_limit_interval_sec | string | length > 0 %}
+StartLimitIntervalSec={{ mongodb_systemd_unit_start_limit_interval_sec }}
+{% endif %}
 
 [Service]
 User={{ mongodb_user }}
+{% if mongodb_systemd_unit_restart | length > 0 %}
+Restart={{ mongodb_systemd_unit_restart }}
+{% endif %}
+{% if mongodb_systemd_unit_restart_sec | string | length > 0 %}
+RestartSec={{ mongodb_systemd_unit_restart_sec }}
+{% endif %}
 {% if mongodb_use_numa | bool %}
 {% if mongodb_use_mongos | bool %}
 ExecStart=/usr/bin/numactl --interleave=all mongos --config /etc/mongos.conf

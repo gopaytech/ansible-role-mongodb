@@ -13,6 +13,22 @@
           and mongodb_net_ssl_host != mongodb_login_host
           and not mongodb_replication_replset )
 
+- name: Check systemd unit restart limits
+  fail:
+    msg: 'mongodb_systemd_unit_start_limit_interval_sec must be greater than mongodb_systemd_unit_start_limit_burst * mongodb_systemd_unit_restart_sec!'
+  when:
+    - mongodb_systemd_unit_restart_sec | string | length > 0
+    - mongodb_systemd_unit_start_limit_burst | string | length > 0
+    - mongodb_systemd_unit_start_limit_interval_sec | string | length > 0
+    - ( mongodb_systemd_unit_start_limit_interval_sec | int <= mongodb_systemd_unit_start_limit_burst | int * mongodb_systemd_unit_restart_sec | int )
+
+- name: Check value of variable mongodb_systemd_unit_kill_mode
+  fail:
+    msg: 'Set mongodb_systemd_unit_kill_mode to control-group, process, mixed or none!'
+  when:
+    - mongodb_systemd_unit_kill_mode | length > 0
+    - mongodb_systemd_unit_kill_mode not in ['control-group', 'process', 'mixed', 'none']
+
 - name: Include OS-specific variables
   include_vars: "{{ item }}"
   with_first_found:
