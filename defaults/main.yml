@@ -37,9 +37,9 @@ mongodb_systemd_unit_limit_nofile: 64000
 mongodb_systemd_unit_limit_nproc: 64000
 # Ordering/dependencies, to avoid NodeNotFound (code 74) when the hostname is resolved before the resolver is up on boot
 mongodb_systemd_unit_after: "network-online.target nss-lookup.target systemd-resolved.service"   # Written to the 10-restart.conf drop-in
-mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
+mongodb_systemd_unit_wants: "network-online.target"
 mongodb_systemd_unit_requires_mounts_for: "{{ mongodb_storage_dbpath }}"   # Wait for the data mount; mongod can start on an empty mountpoint and never fail
-# Restart policy. Empty string omits the directive. Interval must be greater than burst * restart_sec (5 * 10 = 50 -> 60)
+# Restart policy. Empty string omits the directive. Plain seconds only. Interval must be greater than burst * restart_sec (5 * 10 = 50 -> 60)
 mongodb_systemd_unit_restart: on-failure
 mongodb_systemd_unit_restart_sec: 10
 mongodb_systemd_unit_start_limit_burst: 5
@@ -47,7 +47,7 @@ mongodb_systemd_unit_start_limit_interval_sec: 60
 # Optional, unset by default. Raise for large datasets so systemd does not SIGKILL during startup recovery or shutdown flush
 mongodb_systemd_unit_timeout_start_sec: ""
 mongodb_systemd_unit_timeout_stop_sec: ""
-mongodb_systemd_unit_kill_mode: ""               # control-group, process, mixed or none
+mongodb_systemd_unit_kill_mode: ""               # control-group, process or mixed
 mongodb_systemd_unit_kill_signal: ""             # e.g. SIGTERM
 
 mongodb_disable_transparent_hugepages: false

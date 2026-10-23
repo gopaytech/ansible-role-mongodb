@@ -51,16 +51,18 @@ mongodb_user_update_password: "on_create" # MongoDB user password update default
 mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
 mongodb_systemd_unit_after: "network-online.target nss-lookup.target systemd-resolved.service"   # Written to the 10-restart.conf drop-in
-mongodb_systemd_unit_wants: "network-online.target nss-lookup.target"
+mongodb_systemd_unit_wants: "network-online.target"
 mongodb_systemd_unit_requires_mounts_for: "{{ mongodb_storage_dbpath }}" # Wait for the data mount before starting
 mongodb_systemd_unit_restart: on-failure # Restart= policy, empty omits it
 mongodb_systemd_unit_restart_sec: 10
 mongodb_systemd_unit_start_limit_burst: 5
-mongodb_systemd_unit_start_limit_interval_sec: 60 # Must be greater than burst * restart_sec
+mongodb_systemd_unit_start_limit_interval_sec: 60 # Plain seconds. Must be greater than burst * restart_sec
 mongodb_systemd_unit_timeout_start_sec: "" # Optional TimeoutStartSec, raise for large datasets
 mongodb_systemd_unit_timeout_stop_sec: "" # Optional TimeoutStopSec
-mongodb_systemd_unit_kill_mode: "" # Optional KillMode
+mongodb_systemd_unit_kill_mode: "" # Optional KillMode: control-group, process or mixed
 mongodb_systemd_unit_kill_signal: "" # Optional KillSignal
+# The drop-in is /etc/systemd/system/<daemon>.service.d/10-restart.conf. Setting mongodb_manage_systemd_unit
+# to false stops the role managing it but does not remove an existing file; delete it by hand if needed.
 
 # Disable transparent hugepages on systemd debian based installations
 mongodb_disable_transparent_hugepages: false

@@ -1,7 +1,5 @@
 # {{ ansible_managed }}
 # Survives package upgrades of the vendor unit file.
-{% set unit_has_content = (mongodb_systemd_unit_after | length > 0) or (mongodb_systemd_unit_wants | length > 0) or (mongodb_systemd_unit_requires_mounts_for | length > 0) or (mongodb_systemd_unit_start_limit_burst | string | length > 0) or (mongodb_systemd_unit_start_limit_interval_sec | string | length > 0) %}
-{% if unit_has_content %}
 [Unit]
 {% if mongodb_systemd_unit_after | length > 0 %}
 After={{ mongodb_systemd_unit_after }}
@@ -12,15 +10,16 @@ Wants={{ mongodb_systemd_unit_wants }}
 {% if mongodb_systemd_unit_requires_mounts_for | length > 0 %}
 RequiresMountsFor={{ mongodb_systemd_unit_requires_mounts_for }}
 {% endif %}
+
+[Service]
+# StartLimit* live in [Service] under their legacy names because systemd 219 (EL 7,
+# Amazon Linux 2) ignores them in [Unit]. Newer systemd still reads them here.
 {% if mongodb_systemd_unit_start_limit_burst | string | length > 0 %}
 StartLimitBurst={{ mongodb_systemd_unit_start_limit_burst }}
 {% endif %}
 {% if mongodb_systemd_unit_start_limit_interval_sec | string | length > 0 %}
-StartLimitIntervalSec={{ mongodb_systemd_unit_start_limit_interval_sec }}
+StartLimitInterval={{ mongodb_systemd_unit_start_limit_interval_sec }}
 {% endif %}
-
-{% endif %}
-[Service]
 {% if mongodb_systemd_unit_restart | length > 0 %}
 Restart={{ mongodb_systemd_unit_restart }}
 {% endif %}
