@@ -13,6 +13,32 @@
 - name: Flush all handlers at this point
   meta: flush_handlers
 
+- name: Test MongoDB connection before creating users
+  mongodb_info:
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+  register: mongodb_connection_test
+  ignore_errors: true
+
+# - name: Display MongoDB connection status
+#   debug:
+#     msg: "MongoDB connection status: {{ 'SUCCESS' if mongodb_connection_test.failed is not defined else 'FAILED - ' + mongodb_connection_test.msg }}"
+- name: Display MongoDB connection status
+  debug:
+    msg: >-
+      MongoDB connection status:
+      {{ 'SUCCESS'
+         if (mongodb_connection_test is defined and not mongodb_connection_test.failed | default(false))
+         else 'FAILED - ' ~ (mongodb_connection_test.msg | default(mongodb_connection_test.stderr | default('unknown error')))
+      }}
+
+- name: Debug IP addresses being used
+  debug:
+    msg: 
+      - "mongodb_net_bindip: {{ mongodb_net_bindip }}"
+      - "Resolved login_host: {{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+      - "mongodb_login_host (if set): {{ mongodb_login_host | default('NOT SET') }}"
+
 - name: create administrative user "{{ mongodb_user_admin_name }}"
   mongodb_user:
     database: admin
@@ -20,7 +46,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
@@ -29,6 +55,12 @@
       roles: "userAdminAnyDatabase"
       }
   no_log: true
+  register: user_admin_result
+  ignore_errors: true
+
+- name: Display user admin creation result (without sensitive data)
+  debug:
+    msg: "User admin creation: {{ 'SUCCESS' if user_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create administrative user "{{ mongodb_root_admin_name }}"
   mongodb_user:
@@ -37,7 +69,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
@@ -46,6 +78,12 @@
       roles: "root"
       }
   no_log: true
+  register: root_admin_result
+  ignore_errors: true
+
+- name: Display root admin creation result (without sensitive data)
+  debug:
+    msg: "Root admin creation: {{ 'SUCCESS' if root_admin_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
 
 - name: create backup user "{{ mongodb_root_backup_name }}"
   mongodb_user:
@@ -54,7 +92,7 @@
     password: "{{ item.password }}"
     update_password: "{{ mongodb_user_update_password }}"
     roles: "{{ item.roles }}"
-    login_host: "{{ mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list  | first }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
     login_port: "{{ mongodb_net_port | int }}"
   with_items:
     - {
@@ -63,6 +101,82 @@
       roles: "backup,clusterMonitor"
       }
   no_log: true
+  register: backup_user_result
+  ignore_errors: true
+
+- name: Display backup user creation result (without sensitive data)
+  debug:
+    msg: "Backup user creation: {{ 'SUCCESS' if backup_user_result.failed is not defined else 'FAILED - Check MongoDB logs' }}"
+
+- name: Test if admin user can authenticate
+  mongodb_info:
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    login_user: "{{ mongodb_root_admin_name }}"
+    login_password: "{{ mongodb_root_admin_password }}"
+    login_database: "admin"
+  register: admin_auth_test
+  ignore_errors: true
+  no_log: true
+
+- name: Display admin authentication test result
+  debug:
+    msg: "Admin user authentication: {{ 'SUCCESS' if admin_auth_test.failed is not defined else 'FAILED - User may not exist or wrong credentials' }}"
+
+- name: create normal users with replicaset
+  mongodb_user:
+    database: "{{ item.database }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    update_password: "{{ mongodb_user_update_password }}"
+    roles: "{{ item.roles }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
+  with_items:
+    - "{{ mongodb_users | default([]) }}"
+  when: ( mongodb_replication_replset
+        and mongodb_security_authorization == 'enabled'
+        and mongodb_master is defined and mongodb_master )
+  no_log: true
+  tags: [mongodb]
+
+- name: create normal users without replicaset
+  mongodb_user:
+    database: "{{ item.database }}"
+    name: "{{ item.name }}"
+    password: "{{ item.password }}"
+    update_password: "{{ mongodb_user_update_password }}"
+    roles: "{{ item.roles }}"
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
+  with_items:
+    - "{{ mongodb_users | default([]) }}"
+  when: ( mongodb_security_authorization == 'enabled'
+          and not mongodb_replication_replset )
+  no_log: true
+  tags: [mongodb]
+
+- name: create oplog user with replicaset
+  mongodb_user:
+    database: admin
+    user: "{{ item.user }}"
+    password: "{{ item.password }}"
+    update_password: "{{ mongodb_user_update_password }}"
+    roles:
+      - db: local
+        role: read
+    login_host: "{{ mongodb_login_host | default(mongodb_net_bindip.split(',') | map('replace', '0.0.0.0', '127.0.0.1') | list | first) }}"
+    login_port: "{{ mongodb_net_port | int }}"
+    ssl: "{{ True if mongodb_net_ssl_mode == 'requireSSL' else False }}"
+  with_items:
+    - "{{ mongodb_oplog_users | default([]) }}"
+  when: ( mongodb_replication_replset | length > 0
+        and mongodb_security_authorization == 'enabled'
+        and mongodb_master is defined and mongodb_master )
+  no_log: true
+  tags: [mongodb]
 
 - name: Move back mongod.conf
   template:
