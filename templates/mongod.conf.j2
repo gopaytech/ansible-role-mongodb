@@ -106,7 +106,7 @@ systemLog:
 
 operationProfiling:
   slowOpThresholdMs: {{ mongodb_operation_profiling_slow_op_threshold_ms }}
-  mode: {{ mongodb_operation_profiling_mode }}
+  mode: {{ 'off' if (mongodb_operation_profiling_mode is sameas false or mongodb_operation_profiling_mode | string | lower in ['false', 'off']) else mongodb_operation_profiling_mode }}
   {%- if mongodb_config['operationProfiling'] is defined and mongodb_config['operationProfiling'] is iterable %}
   {%- for item in mongodb_config['operationProfiling'] -%}
   {{ item }}
