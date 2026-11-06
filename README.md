@@ -47,7 +47,7 @@ mongodb_version: "4.4"
 
 mongodb_pymongo_from_pip: true # Install latest PyMongo via PIP or package manager
 mongodb_pymongo_pip_version: 3.6.1 # Choose PyMong version to install from pip. If not set use latest
-mongodb_pip_extra_args: "{{ '--break-system-packages' if ansible_facts['python']['version']['minor'] >= 11 else '' }}" # Extra pip arguments on Debian/Ubuntu (PEP 668)
+mongodb_pip_break_system_packages: true # Let pip install into an externally managed system Python on Debian/Ubuntu (PEP 668)
 mongodb_user_update_password: "on_create" # MongoDB user password update default policy
 mongodb_manage_service: true
 mongodb_manage_systemd_unit: true
