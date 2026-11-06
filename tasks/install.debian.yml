@@ -112,10 +112,14 @@
     state: "{{ mongodb_pymongo_pip_version is defined | ternary('present', 'latest') }}"
     version: "{{ mongodb_pymongo_pip_version | default(omit) }}"
     executable: "{{ mongodb_pip_executable }}"
+  environment:
+    PIP_BREAK_SYSTEM_PACKAGES: "{{ mongodb_pip_break_system_packages | ternary('1', '0') }}"
   when: mongodb_pymongo_from_pip | bool
 
 - name: Install looseversion from PIP
   pip:
     name: looseversion
     executable: "{{ mongodb_pip_executable }}"
+  environment:
+    PIP_BREAK_SYSTEM_PACKAGES: "{{ mongodb_pip_break_system_packages | ternary('1', '0') }}"
   when: mongodb_pymongo_from_pip | bool

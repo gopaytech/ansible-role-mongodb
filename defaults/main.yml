@@ -29,6 +29,8 @@ mongodb_apt_key_url:
 
 mongodb_pymongo_from_pip: true                   # Install latest PyMongo via PIP or package manager
 mongodb_pymongo_pip_version: 4.15.5
+# Debian 12 and Ubuntu 23.04+ mark the system Python as externally managed (PEP 668). pip older than 23.0.1 ignores this setting.
+mongodb_pip_break_system_packages: true
 
 mongodb_user_update_password: "on_create"        # MongoDB user password update default policy
 mongodb_manage_service: true

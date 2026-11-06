@@ -11,3 +11,10 @@
           - dirmngr
           - curl
           - gnupg
+
+    - name: Restore the PEP 668 marker the image strips
+      copy:
+        dest: /usr/lib/python3.12/EXTERNALLY-MANAGED
+        content: |
+          [externally-managed]
+          Error=This environment is externally managed
